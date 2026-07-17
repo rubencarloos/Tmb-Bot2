@@ -31,6 +31,7 @@ const ID_ROL_NO_VERIFICADO = '1527283602658689106';
 
 const ID_CANAL_GENERAL = '1384242107862220880'; // Canal donde se avisan las sanciones
 const ID_CANAL_REGISTRO_SANCIONES = '1527294013592436807'; // Canal privado de logs
+const ID_CANAL_REDES = '1527772832660984028'; // Canal de anuncios de Bloody Blue
 
 // Base de datos temporal para los canales de voz
 const canalesTemporales = new Map();
@@ -471,6 +472,77 @@ client.on('messageCreate', async (message) => {
         }
 
         await message.reply({ content: `✅ Sanción aplicada correctamente a ${target.user.username}.` });
+    }
+
+    // ==========================================
+    // 📢 SISTEMA DE ANUNCIOS DE REDES SOCIALES
+    // Comandos: !youtube, !twitch, !tiktok, !x, !instagram
+    // ==========================================
+    const comandosRedes = ['!youtube', '!twitch', '!tiktok', '!x', '!instagram'];
+    const comandoUsado = message.content.split(' ')[0].toLowerCase();
+
+    if (comandosRedes.includes(comandoUsado)) {
+        // Verificar que es del Staff
+        const isStaff = ROLES_STAFF.some(roleId => message.member.roles.cache.has(roleId));
+        if (!isStaff) return message.reply({ content: '❌ **Acceso Denegado:** Solo el staff puede publicar anuncios de redes.' });
+
+        // Extraer los datos del comando
+        const args = message.content.split(' ');
+        if (args.length < 2) return message.reply(`❌ **Uso correcto:** \`${comandoUsado} <enlace> [mensaje opcional]\``);
+
+        const enlace = args[1];
+        // Si hay más palabras después del enlace, son el mensaje personalizado
+        const mensajeExtra = args.slice(2).join(' ') || '¡Nuevo contenido disponible! Haz clic en el enlace para verlo.';
+
+        let tituloPanel = '';
+        let colorPanel = '';
+        let iconoPlataforma = '';
+
+        // Decoración y colores según la plataforma
+        if (comandoUsado === '!youtube') {
+            tituloPanel = 'BLOODY BLUE HA SUBIDO UN NUEVO VÍDEO';
+            colorPanel = '#FF0000'; // Rojo YouTube
+            iconoPlataforma = '▶️';
+        } else if (comandoUsado === '!twitch') {
+            tituloPanel = 'BLOODY BLUE ESTÁ EN DIRECTO';
+            colorPanel = '#9146FF'; // Morado Twitch
+            iconoPlataforma = '📺';
+        } else if (comandoUsado === '!tiktok') {
+            tituloPanel = 'BLOODY BLUE HA PUBLICADO UN TIKTOK';
+            colorPanel = '#000000'; // Negro TikTok
+            iconoPlataforma = '📱';
+        } else if (comandoUsado === '!x') {
+            tituloPanel = 'BLOODY BLUE HA PUBLICADO EN X';
+            colorPanel = '#1DA1F2'; // Azul Twitter/X
+            iconoPlataforma = '💬';
+        } else if (comandoUsado === '!instagram') {
+            tituloPanel = 'BLOODY BLUE HA SUBIDO UNA PUBLICACIÓN';
+            colorPanel = '#E1306C'; // Rosa Instagram
+            iconoPlataforma = '📸';
+        }
+
+        // Buscar el canal de redes
+        const canalRedes = message.guild.channels.cache.get(ID_CANAL_REDES);
+        if (!canalRedes) return message.reply('❌ Error: No encuentro el canal de redes configurado.');
+
+        // Crear el panel decorado
+        const embedRedes = new EmbedBuilder()
+            .setColor(colorPanel)
+            .setTitle(`${iconoPlataforma} ${tituloPanel}`)
+            .setURL(enlace)
+            .setDescription(`### ${mensajeExtra}\n\n🔗 **[HAZ CLIC AQUÍ PARA ACCEDER AL CONTENIDO](${enlace})**`)
+            .addFields({ 
+                name: '🌐 Sígueme en mis Redes Sociales', 
+                value: '>>> **[YouTube](https://www.youtube.com/@BloodyBlue0)** | **[X (Twitter)](https://x.com/BloodyBlueYt)** | **[TikTok](https://www.tiktok.com/@bloodyblue0)** | **[Instagram](https://www.instagram.com/bloody_blue0/)**' 
+            })
+            .setFooter({ text: 'Tmb Studio - Notificación de Redes Sociales', iconURL: message.guild.iconURL() })
+            .setTimestamp();
+
+        // Enviar SOLAMENTE el panel decorado (Cero menciones, ni visibles ni ocultas)
+        await canalRedes.send({ embeds: [embedRedes] });
+        
+        // Borrar el mensaje del comando original para mantener limpio el chat
+        await message.delete();
     }
 });
 
