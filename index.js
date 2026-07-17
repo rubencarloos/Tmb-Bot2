@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionFlagsBits } = require('discord.js');
-const fs = require('fs'); // ⚠️ IMPORTANTE: Añadido para el sistema de guardado de sanciones
+const fs = require('fs'); 
 require('dotenv').config();
 
 const client = new Client({
@@ -475,71 +475,77 @@ client.on('messageCreate', async (message) => {
     }
 
     // ==========================================
-    // 📢 SISTEMA DE ANUNCIOS DE REDES SOCIALES (SIN PERMISOS, SOLO EN CANAL ESPECÍFICO)
-    // Comandos: !youtube, !twitch, !tiktok, !x, !instagram
+    // 📢 SISTEMA DE ANUNCIOS DE REDES SOCIALES
+    // USO: !comando @usuario <enlace> [mensaje extra]
     // ==========================================
+    
     const comandosRedes = ['!youtube', '!twitch', '!tiktok', '!x', '!instagram'];
     const comandoUsado = message.content.split(' ')[0].toLowerCase();
 
     if (comandosRedes.includes(comandoUsado)) {
-        // VERIFICACIÓN: Solo funciona si el mensaje se manda en el canal de redes
-        if (message.channelId !== ID_CANAL_REDES) {
-            return message.reply(`❌ **Comando ignorado:** Los anuncios de redes solo se pueden crear en el canal <#${ID_CANAL_REDES}>.`);
+        if (message.channel.id !== ID_CANAL_REDES) return; 
+
+        const args = message.content.split(' ');
+        
+        // Exigimos el comando, la mención y el enlace (mínimo 3 elementos)
+        if (args.length < 3) {
+             return message.reply(`❌ **Uso correcto:** \`${comandoUsado} @usuario <enlace> [mensaje opcional]\``);
         }
 
-        // Extraer los datos del comando
-        const args = message.content.split(' ');
-        if (args.length < 2) return message.reply(`❌ **Uso correcto:** \`${comandoUsado} <enlace> [mensaje opcional]\``);
+        const usuarioMencionado = message.mentions.members.first() || message.mentions.roles.first();
+        if (!usuarioMencionado) {
+             return message.reply(`❌ **Error:** Debes mencionar a un usuario o rol válido después del comando.\nEjemplo: \`${comandoUsado} @BloodyBlue https://...\``);
+        }
 
-        const enlace = args[1];
-        // Si hay más palabras después del enlace, son el mensaje personalizado
-        const mensajeExtra = args.slice(2).join(' ') || '¡Nuevo contenido disponible! Haz clic en el enlace para verlo.';
+        const enlace = args[2];
+        const mensajeExtra = args.slice(3).join(' ') || '¡Nuevo contenido disponible! No te lo pierdas.';
 
-        let tituloPanel = '';
+        let accionTexto = '';
         let colorPanel = '';
         let iconoPlataforma = '';
 
-        // Decoración y colores según la plataforma
         if (comandoUsado === '!youtube') {
-            tituloPanel = 'BLOODY BLUE HA SUBIDO UN NUEVO VÍDEO';
-            colorPanel = '#FF0000'; // Rojo YouTube
+            accionTexto = 'HA SUBIDO UN NUEVO VÍDEO';
+            colorPanel = '#FF0000'; 
             iconoPlataforma = '▶️';
         } else if (comandoUsado === '!twitch') {
-            tituloPanel = 'BLOODY BLUE ESTÁ EN DIRECTO';
-            colorPanel = '#9146FF'; // Morado Twitch
+            accionTexto = 'ESTÁ EN DIRECTO';
+            colorPanel = '#9146FF'; 
             iconoPlataforma = '📺';
         } else if (comandoUsado === '!tiktok') {
-            tituloPanel = 'BLOODY BLUE HA PUBLICADO UN TIKTOK';
-            colorPanel = '#000000'; // Negro TikTok
+            accionTexto = 'HA PUBLICADO UN TIKTOK';
+            colorPanel = '#000000'; 
             iconoPlataforma = '📱';
         } else if (comandoUsado === '!x') {
-            tituloPanel = 'BLOODY BLUE HA PUBLICADO EN X';
-            colorPanel = '#1DA1F2'; // Azul Twitter/X
+            accionTexto = 'HA PUBLICADO EN X';
+            colorPanel = '#1DA1F2'; 
             iconoPlataforma = '💬';
         } else if (comandoUsado === '!instagram') {
-            tituloPanel = 'BLOODY BLUE HA SUBIDO UNA PUBLICACIÓN';
-            colorPanel = '#E1306C'; // Rosa Instagram
+            accionTexto = 'HA SUBIDO UNA PUBLICACIÓN';
+            colorPanel = '#E1306C'; 
             iconoPlataforma = '📸';
         }
 
-        // Crear el panel decorado
+        const canalRedes = message.guild.channels.cache.get(ID_CANAL_REDES);
+        if (!canalRedes) return message.reply('❌ Error interno: No encuentro el canal de redes configurado.');
+
+        // Creamos el panel super limpio (sin setURL ni setImage para no pisar a Discord)
         const embedRedes = new EmbedBuilder()
             .setColor(colorPanel)
-            .setTitle(`${iconoPlataforma} ${tituloPanel}`)
-            .setURL(enlace)
-            .setDescription(`### ${mensajeExtra}\n\n🔗 **[HAZ CLIC AQUÍ PARA ACCEDER AL CONTENIDO](${enlace})**`)
-            .addFields({ 
-                name: '🌐 Sígueme en mis Redes Sociales', 
-                value: '>>> **[YouTube](https://www.youtube.com/@BloodyBlue0)** | **[X (Twitter)](https://x.com/BloodyBlueYt)** | **[TikTok](https://www.tiktok.com/@bloodyblue0)** | **[Instagram](https://www.instagram.com/bloody_blue0/)**' 
-            })
-            .setFooter({ text: 'Tmb Studio - Notificación de Redes Sociales', iconURL: message.guild.iconURL() })
+            .setDescription(`## ${iconoPlataforma} ${usuarioMencionado} ${accionTexto}\n\n### ${mensajeExtra}`)
+            .setFooter({ text: 'Tmb Studio - Notificación de Redes', iconURL: message.guild.iconURL() })
             .setTimestamp();
 
-        // Enviar SOLAMENTE el panel decorado
-        await message.channel.send({ embeds: [embedRedes] });
-        
-        // Borrar el mensaje del comando original para mantener limpio el chat
-        await message.delete();
+        try {
+            // Mandamos el mensaje: Primero la mención y el enlace (para que Discord cree la foto), luego el panel bonito debajo.
+            await canalRedes.send({ 
+                content: `${usuarioMencionado} \n${enlace}`, 
+                embeds: [embedRedes] 
+            });
+            await message.delete();
+        } catch (error) {
+            console.log(`[DEBUG] ERROR AL ENVIAR O BORRAR:`, error);
+        }
     }
 });
 
