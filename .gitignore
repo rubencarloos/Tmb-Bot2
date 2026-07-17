@@ -1,0 +1,4 @@
+node_modules
+.env
+sanciones.json
+package-lock.json
