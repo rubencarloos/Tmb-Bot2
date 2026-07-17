@@ -475,16 +475,17 @@ client.on('messageCreate', async (message) => {
     }
 
     // ==========================================
-    // 📢 SISTEMA DE ANUNCIOS DE REDES SOCIALES
+    // 📢 SISTEMA DE ANUNCIOS DE REDES SOCIALES (SIN PERMISOS, SOLO EN CANAL ESPECÍFICO)
     // Comandos: !youtube, !twitch, !tiktok, !x, !instagram
     // ==========================================
     const comandosRedes = ['!youtube', '!twitch', '!tiktok', '!x', '!instagram'];
     const comandoUsado = message.content.split(' ')[0].toLowerCase();
 
     if (comandosRedes.includes(comandoUsado)) {
-        // Verificar que es del Staff
-        const isStaff = ROLES_STAFF.some(roleId => message.member.roles.cache.has(roleId));
-        if (!isStaff) return message.reply({ content: '❌ **Acceso Denegado:** Solo el staff puede publicar anuncios de redes.' });
+        // VERIFICACIÓN: Solo funciona si el mensaje se manda en el canal de redes
+        if (message.channelId !== ID_CANAL_REDES) {
+            return message.reply(`❌ **Comando ignorado:** Los anuncios de redes solo se pueden crear en el canal <#${ID_CANAL_REDES}>.`);
+        }
 
         // Extraer los datos del comando
         const args = message.content.split(' ');
@@ -521,10 +522,6 @@ client.on('messageCreate', async (message) => {
             iconoPlataforma = '📸';
         }
 
-        // Buscar el canal de redes
-        const canalRedes = message.guild.channels.cache.get(ID_CANAL_REDES);
-        if (!canalRedes) return message.reply('❌ Error: No encuentro el canal de redes configurado.');
-
         // Crear el panel decorado
         const embedRedes = new EmbedBuilder()
             .setColor(colorPanel)
@@ -538,8 +535,8 @@ client.on('messageCreate', async (message) => {
             .setFooter({ text: 'Tmb Studio - Notificación de Redes Sociales', iconURL: message.guild.iconURL() })
             .setTimestamp();
 
-        // Enviar SOLAMENTE el panel decorado (Cero menciones, ni visibles ni ocultas)
-        await canalRedes.send({ embeds: [embedRedes] });
+        // Enviar SOLAMENTE el panel decorado
+        await message.channel.send({ embeds: [embedRedes] });
         
         // Borrar el mensaje del comando original para mantener limpio el chat
         await message.delete();
