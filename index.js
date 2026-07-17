@@ -143,7 +143,7 @@ const textosInfo = {
 
 ### 📌 TMB STUDIO
 > <#1452327339990978704> 📢 **Anuncios:** ¡Entérate de todo antes que nadie! Actualizaciones oficiales.
-> <#1468248035195617310> 📜 **Información:** La biblia de la comunidad. Su lectura es obligatoria.
+> <#1468248035195617310> 📜 **Información:** La bible de la comunidad. Su lectura es obligatoria.
 > <#1493710862123274371> 🎫 **Tickets:** Reporta bugs, errores, jugadores o solicita soporte.
 
 ### 🏆 TMB EVENTOS
@@ -476,9 +476,8 @@ client.on('messageCreate', async (message) => {
 
     // ==========================================
     // 📢 SISTEMA DE ANUNCIOS DE REDES SOCIALES
-    // USO: !comando @usuario <enlace> [mensaje extra]
+    // USO DIRECTO: !comando <enlace>
     // ==========================================
-    
     const comandosRedes = ['!youtube', '!twitch', '!tiktok', '!x', '!instagram'];
     const comandoUsado = message.content.split(' ')[0].toLowerCase();
 
@@ -487,25 +486,25 @@ client.on('messageCreate', async (message) => {
 
         const args = message.content.split(' ');
         
-        // Exigimos el comando, la mención y el enlace (mínimo 3 elementos)
-        if (args.length < 3) {
-             return message.reply(`❌ **Uso correcto:** \`${comandoUsado} @usuario <enlace> [mensaje opcional]\``);
+        // Exigimos solo el comando y el enlace (mínimo 2 elementos)
+        if (args.length < 2) {
+             return message.reply(`❌ **Uso correcto:** \`${comandoUsado} <enlace>\``);
         }
 
-        const usuarioMencionado = message.mentions.members.first() || message.mentions.roles.first();
-        if (!usuarioMencionado) {
-             return message.reply(`❌ **Error:** Debes mencionar a un usuario o rol válido después del comando.\nEjemplo: \`${comandoUsado} @BloodyBlue https://...\``);
-        }
-
-        const enlace = args[2];
-        const mensajeExtra = args.slice(3).join(' ') || '¡Nuevo contenido disponible! No te lo pierdas.';
+        const enlace = args[1];
+        const usuarioMencionado = message.author; // El @ es 100% de quien hace el comando
 
         let accionTexto = '';
         let colorPanel = '';
         let iconoPlataforma = '';
 
         if (comandoUsado === '!youtube') {
-            accionTexto = 'HA SUBIDO UN NUEVO VÍDEO';
+            // Detecta si es un Shorts o un vídeo normal para clavar el título
+            if (enlace.includes('/shorts/')) {
+                accionTexto = 'HA SUBIDO UN YOUTUBE SHORT';
+            } else {
+                accionTexto = 'HA SUBIDO UN NUEVO VÍDEO';
+            }
             colorPanel = '#FF0000'; 
             iconoPlataforma = '▶️';
         } else if (comandoUsado === '!twitch') {
@@ -529,19 +528,22 @@ client.on('messageCreate', async (message) => {
         const canalRedes = message.guild.channels.cache.get(ID_CANAL_REDES);
         if (!canalRedes) return message.reply('❌ Error interno: No encuentro el canal de redes configurado.');
 
-        // Creamos el panel super limpio (sin setURL ni setImage para no pisar a Discord)
+        // Panel estético súper limpio de cabecera con el autor real
         const embedRedes = new EmbedBuilder()
             .setColor(colorPanel)
-            .setDescription(`## ${iconoPlataforma} ${usuarioMencionado} ${accionTexto}\n\n### ${mensajeExtra}`)
+            .setDescription(`## ${iconoPlataforma} ${usuarioMencionado} ${accionTexto}`)
             .setFooter({ text: 'Tmb Studio - Notificación de Redes', iconURL: message.guild.iconURL() })
             .setTimestamp();
 
         try {
-            // Mandamos el mensaje: Primero la mención y el enlace (para que Discord cree la foto), luego el panel bonito debajo.
-            await canalRedes.send({ 
-                content: `${usuarioMencionado} \n${enlace}`, 
-                embeds: [embedRedes] 
-            });
+            // 1. Enviamos el panel decorativo del bot de cabecera
+            await canalRedes.send({ embeds: [embedRedes] });
+            
+            // 2. Enviamos el enlace completamente limpio e independiente. 
+            // Esto obliga a Discord a activar su scraper nativo y forzar la inserción (preview) gigante de cualquier plataforma.
+            await canalRedes.send({ content: `${enlace}` });
+            
+            // Borramos el comando inicial para no ensuciar
             await message.delete();
         } catch (error) {
             console.log(`[DEBUG] ERROR AL ENVIAR O BORRAR:`, error);
