@@ -173,7 +173,7 @@ const textosInfo = {
 > - **Límite:** Solo puedes tener un ticket V.I.P a la vez.
 
 ### 💰 EVENTOS V.I.P
-> Se realiza **uno por edición**. Los jugadores que poseen el rol <@&1384863457114984500> acceden a este evento donde hay en juego un **Premio en metálico**.
+> Se realiza **uno por edición**. Los jugadores que poseen el rol <@&1384863457114984500> acceden a este evento donde hay en juego un **Premio Sorpresa**.
 
 ### 🔖 CATEGORÍAS DE PRUEBAS
 > ⚔️ **HABILIDAD:** Requiere nivel mecánico y experiencia.
