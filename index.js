@@ -203,7 +203,7 @@ const textosInfo = {
 
 **⚙️ ¿Qué necesito para poder entrar a jugar?**
 > 1️⃣ Entra al canal <#1526515556646125670> y descarga los Mods.
-> 2️⃣ En tu Minecraft, añade la IP que encontrarás en <#1523360647973306378>.
+> 2️⃣ En tu Minecraft, añade la IP que encontrarás en <#1532709349267345578>.
 > 3️⃣ ¡Disfruta!`
 };
 
