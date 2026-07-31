@@ -157,7 +157,7 @@ const textosInfo = {
 > <#1526355557684871238> 🔊 **Crear Voz:** Genera salas automáticas para charlar o jugar tranquilamente.
 
 ### 🌐 TMB SERVIDOR
-> <#1523360647973306378> 🤖 **Chat Global:** Observa el CHAT del SERVIDOR en TIEMPO REAL sin entrar al juego.
+> <#1532709349267345578> 🤖 **Chat Global:** Observa el CHAT del SERVIDOR en TIEMPO REAL sin entrar al juego.
 > <#1526515556646125670> 📦 **Mods:** Prepara tu Minecraft descargando los archivos necesarios.`,
 
     infoEventos: `# 📘 INFORMACIÓN EVENTOS\n
